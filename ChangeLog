@@ -1,5 +1,10 @@
 Revision history for Perl module Business::ISIN.
 
+0.11 Thu Oct  4 21:22:51 BST 2001
+
+	- Fixed algorithm bug and checked against thousands of ISINs.
+	- Added PS country code (Palestine).
+
 0.10 Sat Sep 29 06:42:39 UTC 2001
 
 	- Changed algorithm to cope with ISINs containing letters, such

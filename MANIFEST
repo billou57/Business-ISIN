@@ -3,4 +3,5 @@ ISIN.pm
 MANIFEST
 Makefile.PL
 README
+test-isins.txt
 test.pl

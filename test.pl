@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..10\n"; }
+BEGIN { $| = 1; print "1..11\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Business::ISIN;
 $loaded = 1;
@@ -66,3 +66,8 @@ sub test { # ok if passed a true value
     
     $isin->set("US459056DG91");
     test($isin->is_valid);
+
+# Check a file full of valid ISINs
+open my $test, "test-isins.txt" or die "cannot open test-isins.txt: $!";
+my @tests = map { chomp; $isin->set($_); $isin->is_valid } <$test>;
+test(not grep { not $_ } @tests);

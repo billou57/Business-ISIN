@@ -8,7 +8,7 @@ require 5.005;
 
 use strict;
 use vars qw($VERSION @country_codes);
-$VERSION = '0.10';
+$VERSION = '0.11';
 
 use subs qw(check_digit);
 use overload '""' => \&get; # "$isin" shows value
@@ -16,16 +16,16 @@ use overload '""' => \&get; # "$isin" shows value
 
 # List of valid two-letter country codes, as defined in ISO 3166
 @country_codes = qw(
-AD AE AF AG AI AL AM AN AO AQ AR AS AT AU AW AZ BA BB BD BE BF BG BH BI BJ 
-BM BN BO BR BS BT BV BW BY BZ CA CC CF CG CH CI CK CL CM CN CO CR CU CV CX 
-CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE 
-GF GH GI GL GM GN GP GQ GR GT GU GW GY HK HM HN HR HT HU ID IE IL IN IO IQ 
-IR IS IT JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT 
-LU LV LY MA MC MD MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA 
-NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PT PW PY 
-QA RE RO RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR ST SV SY SZ TC 
-TD TF TG TH TJ TK TM TN TO TP TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG 
-VI VN VU WF WS YE YT YU ZA ZM ZR ZW
+AD AE AF AG AI AL AM AN AO AQ AR AS AT AU AW AZ BA BB BD BE BF BG BH BI BJ
+BM BN BO BR BS BT BV BW BY BZ CA CC CF CG CH CI CK CL CM CN CO CR CU CV CX
+CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE
+GF GH GI GL GM GN GP GQ GR GT GU GW GY HK HM HN HR HT HU ID IE IL IN IO IQ
+IR IS IT JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT
+LU LV LY MA MC MD MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA
+NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW
+PY QA RE RO RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR ST SV SY SZ
+TC TD TF TG TH TJ TK TM TN TO TP TR TT TV TW TZ UA UG UM US UY UZ VA VC VE
+VG VI VN VU WF WS YE YT YU ZA ZM ZR ZW
 );
 
 #######################################################################
@@ -95,14 +95,15 @@ sub check_digit {
 
     my @n = split //, $data; # take individual digits
 
-    for my $i (0 .. scalar @n - 1) { if ($i % 2 == 0) { $n[$i] *= 2 } }
-    # double every second digit
+    my $max = scalar @n - 1;
+    for my $i (0 .. $max) { if ($i % 2 == 0) { $n[$max - $i] *= 2 } }
+    # double every second digit, starting from the RIGHT hand side.
 
     for my $i (@n) { $i = $i % 10 + int $i / 10 } # add digits if >=10
 
     my $sum = 0; for my $i (@n) { $sum += $i } # get the sum of the digits
 
-    return 10 - ($sum % 10);
+    return (10 - $sum) % 10; # tens complement, number between 0 and 9
 }
 
 1;
