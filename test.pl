@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..15\n"; }
+BEGIN { $| = 1; print "1..10\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Business::ISIN;
 $loaded = 1;
@@ -20,65 +20,49 @@ print "ok 1\n";
 
 my $isin = new Business::ISIN;
 
+
+use vars qw($testno);
+$testno = 2;
+sub test { # ok if passed a true value
+    my $ok = shift;   
+    print $ok ? "ok $testno\n" : "not ok $testno\n";
+    $testno++;
+    return $ok;
+}
+
+
 # GB0004005475 is correct
+# Check of is_valid
 
-my $testno = 1;
-for (0..4) { 
-    $testno++;
-    $isin->set("GB000400547$_");
-    if (defined $isin->get) { # check stringification
-	print "not ok $testno\n";
-	next;
-    }
-    print $isin->is_valid() ? "not ok $testno\n" : "ok $testno\n";
-}
+    $isin->set("GB0004005475"); # right
+    test($isin->is_valid);
 
-$testno++;
-$isin->set(my $HSBC = "GB0004005475");
-if ($isin->is_valid and $isin->get eq $HSBC and "$isin" eq $HSBC) {
-    print "ok $testno\n";
-} else {
-    print "not ok $testno\n";
-}
+    $isin->set("GB0004005470"); # wrong
+    test(not $isin->is_valid);
 
-for (6..9) {
-    $testno++;
-    $isin->set("GB000400547$_");
-    if (defined $isin->get) { # check stringification
-	print "not ok $testno\n";
-	next;
-    }
-    print $isin->is_valid() ? "not ok $testno\n" : "ok $testno\n";
-}
+# Check of get and stringify
 
-# invalid country code
+    $isin->set("GB0004005475");
+    test($isin->get eq "GB0004005475");
 
-my @errors = (
-['000invalid00' => "'000invalid00' is unparsable"],
-['aa0000000000' => "Bad country code 'AA' in 'aa0000000000'"],
-['gb0000000001' => "The check digit in 'gb0000000001' is inconsistent"],
-);
+    $isin->set("GB0004005475");
+    test("$isin" eq "GB0004005475");
 
-foreach my $error (@errors) {
-    $testno++;
-    $isin->set( $error->[0] );
-    if ($isin->is_valid ) {
-	print "not ok $testno\n";
-    } else {
-	if ( $isin->error eq $error->[1] ) {
-	    print "ok $testno\n";
-	} else {
-	    print "not ok $testno\n";
-	    print "\$isin->error = (" . $isin->error . ")\n";
-	    print "\$error->[1] = (" . $error->[1] . ")\n";
-	}
-    }
-}
+# Check of error messages
 
-$testno++;
-eval { Business::ISIN::check_digit( '00invalid00' )};
-if ($@ =~ /^Invalid data: need 9 decimal digits/) {
-    print "ok $testno\n";
-} else {
-    print "not ok $testno\n";
-}
+    $isin->set("000invalid00");
+    test($isin->error eq "'000invalid00' is unparsable");
+
+    $isin->set("aa0000000000");
+    test($isin->error eq "Bad country code 'AA' in 'aa0000000000'");
+
+    $isin->set("gb0000000001");
+    test($isin->error eq "The check digit in 'gb0000000001' is inconsistent");
+
+# Check of ISINs containing letters
+
+    $isin->set("AU0000ZELAM2");
+    test($isin->is_valid);
+    
+    $isin->set("US459056DG91");
+    test($isin->is_valid);

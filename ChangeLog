@@ -1,0 +1,13 @@
+Revision history for Perl module Business::ISIN.
+
+0.10 Sat Sep 29 06:42:39 UTC 2001
+
+	- Changed algorithm to cope with ISINs containing letters, such
+	  as "US459056DG99".
+	
+	- Checked algorithm against draft copy of update of ISO 6166.
+
+0.01 Sat Mar 10 15:17:41 UTC 2001
+
+	- Original version.
+
