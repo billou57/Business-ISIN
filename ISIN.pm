@@ -8,25 +8,15 @@ require 5.005;
 
 use strict;
 use vars qw($VERSION @country_codes);
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 use subs qw(check_digit);
 use overload '""' => \&get; # "$isin" shows value
 
 
-# List of valid two-letter country codes, as defined in ISO 3166
-@country_codes = qw(
-AD AE AF AG AI AL AM AN AO AQ AR AS AT AU AW AZ BA BB BD BE BF BG BH BI BJ
-BM BN BO BR BS BT BV BW BY BZ CA CC CF CG CH CI CK CL CM CN CO CR CU CV CX
-CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE
-GF GH GI GL GM GN GP GQ GR GT GU GW GY HK HM HN HR HT HU ID IE IL IN IO IQ
-IR IS IT JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT
-LU LV LY MA MC MD MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA
-NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW
-PY QA RE RO RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR ST SV SY SZ
-TC TD TF TG TH TJ TK TM TN TO TP TR TT TV TW TZ UA UG UM US UY UZ VA VC VE
-VG VI VN VU WF WS YE YT YU ZA ZM ZR ZW
-);
+# Get list of valid two-letter country codes.
+use Locale::Country;
+@country_codes = map {uc} Locale::Country::all_country_codes();
 
 #######################################################################
 # Class Methods
@@ -51,6 +41,7 @@ sub new {
 sub set {
     my ($self, $isin) = @_;
     $self->{value} = $isin;
+    return $self;
 }
 
 sub get {
@@ -60,6 +51,10 @@ sub get {
 }
 
 sub is_valid { # checks if self is a valid ISIN
+    
+    if (not ref $_[0]) {
+    }
+    
     my $self = shift;
     return not defined $self->error;
 }
@@ -116,6 +111,10 @@ __END__
 
 Business::ISIN - validate International Securities Identification Numbers
 
+=head1 VERSION
+
+0.12
+
 =head1 SYNOPSIS
 
     use Business::ISIN;
@@ -133,7 +132,7 @@ Business::ISIN - validate International Securities Identification Numbers
 
 =head1 REQUIRES
 
-Perl5, Carp
+Perl5, Locale::Country, Carp
 
 =head1 DESCRIPTION
 
@@ -149,6 +148,8 @@ no attempt will be made to check that the argument is valid.
 
 The C<set()> method sets the ISIN's value to a scalar argument which you
 give.  Here, no attempt will be made to check that the argument is valid.
+The method returns the object, to allow you to do things like
+C<$isin-E<gt>set("GB0004005475")-E<gt>is_valid>.
 
 The C<get()> method returns a string, which will be the ISIN's value if it
 is syntactically valid, and undef otherwise.  Interpolating the object
@@ -162,7 +163,8 @@ the following is true:
 =over 4
 
 =item * The string does not consist of two letters followed by nine
-characters in [A-Z0-9] followed by one decimal digit;
+characters in [A-Z0-9] followed by one decimal digit (but case is
+unimportant);
 
 =item * The two letters are not a legal ISO 3166 country code (but case is
 unimportant);
@@ -184,6 +186,11 @@ the so-called 'double-add-double' algorithm.
 
 C<check_digit()> will croak with the message 'Invalid data' if you pass it
 an unsuitable argument.
+
+=head1 ACKNOWLEDGEMENTS
+
+Thanks to Peter Dintelmann (Peter.Dintelmann@Dresdner-Bank.com) for help
+debugging this module.
 
 =head1 AUTHOR
 
