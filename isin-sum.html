@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"DTD/xhtml1-transitional.dtd">
+
+<html lang="en-GB">
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+
+    <title>David's Homepage: ISIN check digit algorithm</title>
+  </head>
+
+  <body>
+    <h1 align="center">ISIN check digit algorithm</h1>
+
+    <p>The last digit of an ISIN is a check digit, calculated from
+    the other 9 digits which of the numerical portion of the ISIN,
+    using the so-called "double-add-double" algorithm. This
+    document will describe the algorithm, then apply it to an
+    example ISIN, then give an example function that will calculate
+    the check digit.</p>
+
+    <h2>Description of algorithm</h2>
+
+    <p>These are the steps of the calculation. Apply them to the
+    first nine digits of the ISIN to obtain the tenth.</p>
+
+    <ol>
+      <li>Starting with the right-most digit, replace each
+      alternate digit with the sum of the digits of its
+      double.</li>
+
+      <li>Take the sum of these digits. Take its last digit,
+      <i>d</i>.</li>
+
+      <li>The check digit is <i>9-d</i>.</li>
+    </ol>
+
+    <h2>Example: <code>GB0004005475</code> (HSBC)</h2>
+
+    <blockquote>
+<pre>
+<b>        Original number:  0  0  0  4  0  0  5  4  7  [5]</b>
+    x2 alternate digits:  0     0     0    10    14
+             add digits:  0     0     0     1     5
+<b>All digits after step 1:  0  0  0  4  0  0  1  4  5  [5]</b>
+
+<b>         sum of digits: 4 + 1 + 4 + 5  = 14</b>
+     last digit of sum:                   4
+
+<b>           check digit:         9 - 4  =  5</b>  --  correct answer!
+</pre>
+    </blockquote>
+    <!-- Foot of page -->
+    <hr />
+
+    <p align="center"><a mailto="david@sheetmusic.org.uk">David Chan</a>
+    Tue Feb 27 16:16:48 2001</p>
+  </body>
+</html>
+
