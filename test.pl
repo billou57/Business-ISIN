@@ -31,47 +31,64 @@ sub test { # ok if passed a true value
 }
 
 
-# GB0004005475 is correct
 # Check of is_valid
 
-    $isin->set("GB0004005475"); # right
-    test($isin->is_valid);
+$isin->set("GB0004005475"); # right
+test($isin->is_valid);
 
-    $isin->set("GB0004005470"); # wrong
-    test(not $isin->is_valid);
+$isin->set("GB0004005470"); # wrong
+test(not $isin->is_valid);
+
 
 # Check of get and stringify
 
-    $isin->set("GB0004005475");
-    test($isin->get eq "GB0004005475");
+$isin->set("GB0004005475");
+test($isin->get eq "GB0004005475");
 
-    $isin->set("GB0004005475");
-    test("$isin" eq "GB0004005475");
+$isin->set("GB0004005475");
+test("$isin" eq "GB0004005475");
+
 
 # Check of error messages
 
-    $isin->set("000invalid00");
-    test($isin->error eq "'000invalid00' is unparsable");
+$isin->set("000invalid00");
+test($isin->error eq "'000invalid00' does not start with a 2-letter country code");
 
-    $isin->set("aa0000000000");
-    test($isin->error eq "Bad country code 'AA' in 'aa0000000000'");
+$isin->set("aa0000000000");
+test($isin->error eq "'aa0000000000' does not start with a 2-letter country code");
 
-    $isin->set("gb0000000001");
-    test($isin->error eq "The check digit in 'gb0000000001' is inconsistent");
+$isin->set("gb12%-oops90");
+test($isin->error eq "'gb12%-oops90' does not have characters 3-11 in [A-Za-z0-9]");
+
+$isin->set("us123456789X");
+test($isin->error eq "'us123456789X' character 12 should be a digit");
+
+$isin->set("gb0004005475hsbc2");
+test($isin->error eq "'gb0004005475hsbc2' has too many characters");
+
+$isin->set("gb0000000001");
+test($isin->error eq "'gb0000000001' has an inconsistent check digit");
+
+
 
 # Check of ISINs containing letters
 
-    $isin->set("AU0000ZELAM2");
-    test($isin->is_valid);
-    
-    $isin->set("US459056DG91");
-    test($isin->is_valid);
+$isin->set("AU0000ZELAM2");
+test($isin->is_valid);
+
+$isin->set("US459056DG91");
+test($isin->is_valid);
+
 
 # Check that set() returns an object
-    test(($isin->set("US459056DG91")->is_valid));
+
+test(($isin->set("US459056DG91")->is_valid));
+
 
 # Check a file full of valid ISINs
+
 open my $test, "test-isins.txt" or die "cannot open test-isins.txt: $!";
 my @tests = map { chomp; $isin->set($_)->is_valid } <$test>;
 test(not grep { not $_ } @tests);
+
 

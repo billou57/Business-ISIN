@@ -7,8 +7,8 @@ use Carp;
 require 5.005;
 
 use strict;
-use vars qw($VERSION @country_codes);
-$VERSION = '0.12';
+use vars qw($VERSION %country_code);
+$VERSION = '0.20';
 
 use subs qw(check_digit);
 use overload '""' => \&get; # "$isin" shows value
@@ -16,8 +16,11 @@ use overload '""' => \&get; # "$isin" shows value
 
 # Get list of valid two-letter country codes.
 use Locale::Country;
-@country_codes = map {uc} Locale::Country::all_country_codes();
+$country_code{$_} = 1 for map {uc} Locale::Country::all_country_codes();
 
+# Also include the non-country "country codes", used for bonds issued
+# in multiple countries, etc..
+$country_code{$_} = 1 for qw(XS XA XB XC XD);
 #######################################################################
 # Class Methods
 #######################################################################
@@ -51,26 +54,37 @@ sub get {
 }
 
 sub is_valid { # checks if self is a valid ISIN
-    
-    if (not ref $_[0]) {
-    }
-    
     my $self = shift;
-    return not defined $self->error;
+    
+    # return not defined $self->error; # or for speed, do this instead
+    return (
+        $self->{value} =~ /^(([A-Za-z]{2})([A-Za-z0-9]{9}))([0-9]) $/x
+        and exists $country_code{uc $2}
+        and $4 == check_digit($1)
+    );
 }
 
 sub error {
     # returns the error string resulting from failure of is_valid
     my $self = shift;
+    local $_ = $self->{value};
 
-    return "'" . $self->{value} . "' is unparsable"
-        unless $self->{value} =~ /^([A-Za-z]{2})([A-Za-z0-9]{9})([0-9])$/;
+    /^([A-Za-z]{2})? ([A-Za-z0-9]{9})? ([0-9])? (.*)?$/x;
 
-    return "Bad country code '" . uc($1) . "' in '" . $self->{value} . "'"
-        unless grep {$_ eq uc $1} @country_codes;
+    return "'$_' does not start with a 2-letter country code"
+        unless length $1 > 0 and exists $country_code{uc $1};
 
-    return "The check digit in '" . $self->{value} . "' is inconsistent"
-	unless $3 == check_digit($1.$2);
+    return "'$_' does not have characters 3-11 in [A-Za-z0-9]"
+        unless length $2 > 0;
+
+    return "'$_' character 12 should be a digit"
+        unless length $3 > 0;
+
+    return "'$_' has too many characters"
+        unless length $4 == 0;
+
+    return "'$_' has an inconsistent check digit"
+    	unless $3 == check_digit($1.$2);
 
     return undef;
 }
@@ -113,7 +127,7 @@ Business::ISIN - validate International Securities Identification Numbers
 
 =head1 VERSION
 
-0.12
+0.20
 
 =head1 SYNOPSIS
 
@@ -157,25 +171,26 @@ reference in double quotes has the same effect (see the synopsis).
 
 The C<is_valid()> method returns true if the object contains a syntactically
 valid ISIN.  (Note: this does B<not> guarantee that a security actually
-exists which has that ISIN.) It will return false otherwise, i.e. if one of
-the following is true:
+exists which has that ISIN.) It will return false otherwise.
+
+If an object does contain an invalid ISIN, then the C<error()> method will
+return a string explaining what is wrong, like any of the following:
 
 =over 4
 
-=item * The string does not consist of two letters followed by nine
-characters in [A-Z0-9] followed by one decimal digit (but case is
-unimportant);
+=item * 'xxx' does not start with a 2-letter country code
 
-=item * The two letters are not a legal ISO 3166 country code (but case is
-unimportant);
+=item * 'xxx' does not have characters 3-11 in [A-Za-z0-9]
 
-=item * The check digit does not correspond to the other eleven characterrs.
+=item * 'xxx' character 12 should be a digit
+
+=item * 'xxx' has too many characters
+
+=item * 'xxx' has an inconsistent check digit
 
 =back
 
-If the string was not a syntactically valid ISIN, then the C<error()> method
-will return a string explaining why not, i.e. which is the first of the
-above reasons that applied.  Otherwise, C<error()> will return C<undef>.
+Otherwise, C<error()> will return C<undef>.
 
 C<check_digit()> is an ordinary subroutine and B<not> a class method.  It
 takes a string of the first eleven characters of an ISIN as an argument (e.g.
@@ -189,8 +204,9 @@ an unsuitable argument.
 
 =head1 ACKNOWLEDGEMENTS
 
-Thanks to Peter Dintelmann (Peter.Dintelmann@Dresdner-Bank.com) for help
-debugging this module.
+Thanks to Peter Dintelmann (Peter.Dintelmann@Dresdner-Bank.com) and Tim
+Ayers (tim.ayers@reuters.com) for suggestions and help debugging this
+module.
 
 =head1 AUTHOR
 
@@ -198,6 +214,6 @@ David Chan <david@sheetmusic.org.uk>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2001, David Chan. All rights reserved. This program is free
+Copyright (C) 2002, David Chan. All rights reserved. This program is free
 software; you can redistribute it and/or modify it under the same terms as
 Perl itself.
